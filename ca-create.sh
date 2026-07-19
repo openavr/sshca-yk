@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 # Script to create a CA private keys that can be used for signing openssh
-# certificates while storing the private key ina Yubikey PIV slot.
+# certificates while storing the private key in a Yubikey PIV slot.
 # Use ED25519 and ECDSA key types for user and host CA keys.
 #
 
@@ -15,12 +15,25 @@ CA_TYPES=(
     host
 )
 
+IFS= read -s -p "Enter Passphrase: " PASSPHRASE
+echo ""
+IFS= read -s -p "Enter Passphrase again: " PASSPHRASE_VERIFY
+echo ""
+
+if [ "${PASSPHRASE}" != "${PASSPHRASE_VERIFY}" ]
+then
+    echo "ERROR: passphrases do not match"
+    exit 1
+fi
+
 declare -A SLOTS=(
-    [user-ed25519]="82"
-    [user-ecdsa]="83"
-    [host-ed25519]="84"
-    [host-ecdsa]="85"
+    [ecdsa-user]="82"
+    [ecdsa-host]="83"
+    [ed25519-user]="84"
+    [ed25519-host]="85"
 )
+
+ORGANIZATION="${ORGANIZATION:-openavr.org}"
 
 TTL_DAYS="90"
 
@@ -28,42 +41,66 @@ DEF_PIN="123456"
 DEF_PUK="12345678"
 DEF_MGMT="010203040506070801020304050607080102030405060708"
 
-function create_ca_key_ed25519()
+function create_ca_key()
 {
-    local KEY="${1}"
-    ssh-keygen -t ed25519 -N '' -m PKCS8 -f ${KEY}
-}
+    local KEY_TYPE="${1}"
+    local KEY_PATH="${2}"
+    shift 2
 
-function create_ca_key_ecdsa()
-{
-    local KEY="${1}"
-    ssh-keygen -t ecdsa -b 384 -N '' -m PKCS8 -f ${KEY}
+    local KEYGEN_ARGS=(
+        -N "${PASSPHRASE}"
+    )
+
+    case "${KEY_TYPE}" in
+        ed25519)
+            KEYGEN_ARGS+=( -t ed25519 )
+            ;;
+        ecdsa)
+            KEYGEN_ARGS+=( -t ecdsa -b 384 )
+            ;;
+        *)
+            ;;
+    esac
+
+    ssh-keygen "${KEYGEN_ARGS[@]}" -f ${KEY_PATH} "${@}"
 }
 
 function init_key()
 {
-    local CT=$1
-    local KT=$2
+    # CA Type: Force CT to be fully lower case with ${VAR,,}
+    local CT="${1,,}"
+
+    # Key Type
+    local KT="${2}"
 
     local OPENSSH_KEY="keys-ca/id_${KT}_${CT}_ca"
     local OPENSSH_PUB="keys-ca/id_${KT}_${CT}_ca.pub"
+    local OPENSSL_KEY="keys-ca/id_${KT}_${CT}_ca_key.pem"
     local OPENSSL_PUB="keys-ca/id_${KT}_${CT}_ca_pub.pem"
 
-    local SUBJECT="CN=SSH ${CT} CA"
-    local SLOT="${SLOTS[${CT}-${KT}]}"
+    # Capitalize with ${VAR^}
+    # Upper case with ${VAR^^}
+
+    local SUBJECT="CN=${CT^} SSH CA,O=${ORGANIZATION}"
+    local SLOT="${SLOTS[${KT}-${CT}]}"
 
     if [ ! -f ${OPENSSH_KEY} ]; then
-        create_ca_key_${KT} "${OPENSSH_KEY}" || exit 1
+        create_ca_key ${KT} ${OPENSSH_KEY} -C "OpenAVR ${CT^} SSH CA" || exit 1
     fi
+
+    # Convert private key to a format that can imported into Yubikey
+    cp ${OPENSSH_KEY} ${OPENSSL_KEY} || exit 1
+    ssh-keygen -p -m PKCS8 -N "${PASSPHRASE}" -P "${PASSPHRASE}" -f ${OPENSSL_KEY} || exit 1
 
     # Import the private key into the yubikey.
     ykman piv keys import \
         -m "${DEF_MGMT}" \
-        ${SLOT} ${OPENSSH_KEY}
+        -p "${PASSPHRASE}" \
+        ${SLOT} ${OPENSSL_KEY} || exit 1
 
     # Extract the public key from the yubikey.
     ykman piv keys export \
-        ${SLOT} ${OPENSSL_PUB}
+        ${SLOT} ${OPENSSL_PUB} || exit 1
 
     # Convert openssl pub to openssh pub format.
     #ssh-keygen -i -m PKCS8 -f ${OPENSSL_PUB} > ${OPENSSH_PUB}
@@ -76,18 +113,18 @@ function init_key()
         -m "${DEF_MGMT}" \
         -s "${SUBJECT}" \
         -d ${TTL_DAYS} \
-        ${SLOT} ${OPENSSL_PUB}
+        ${SLOT} ${OPENSSL_PUB} || exit 1
 }
 
 set -x
 
 mkdir -p keys-ca
 
-for CT in "${CA_TYPES[@]}"
+for ca_type in "${CA_TYPES[@]}"
 do
-    for KT in "${KEY_TYPES[@]}"
+    for key_type in "${KEY_TYPES[@]}"
     do
-        init_key "${CT}" "${KT}"
+        init_key "${ca_type}" "${key_type}"
     done
 done
 

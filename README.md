@@ -6,6 +6,23 @@ into a Yubikey, it must be converted first
 You must use `openssh >= 10.3p1` in order to be able to generate ed25519 keys
 and convert them to PEM or PKCS8 format that can be loaded into Yubikey.
 
+For Debian-13 (Trixie), you need to install the openssh tools using debian
+backports. Setup debian backports with the instructions here:
+
+* https://backports.debian.org/Instructions/
+
+Once backports is setup, install the newer version of openssh:
+
+    $ sudo apt update
+    $ sudo apt install \
+        openssh-client/trixie-backports \
+        openssh-server/trixie-backports \
+        openssh-sftp-server/trixie-backports
+
+You only need `openssh >= 10.3p1` if you are loading the CA or user keys into
+the Yubikey, and do not need the newer version if you are only using the
+Yubikey to sign user or host certificates.
+
 **NOTE:** The `-N ''` will generate a key without a passphrase which is
 probably not what you want.
 
@@ -16,9 +33,33 @@ Generate a ed25519 key pair:
 Convert the private key to a format that can be imported into a yubikey:
 
     $ cp id_ed25519_foo id_ed25519_foo.key
-    $ ssh-keygen -p -m PKCS8 -N '' -f id_ed25519_foo.key
+    $ ssh-keygen -p -m PKCS8 -N '' -f id_ed25519_foo_key.pem
 
 Import the private key into a yubikey:
 
-    $ ykman piv keys import 85 id_ed25519_foo.key
+    $ ykman piv keys import 85 id_ed25519_foo_key.pem
     $ ykman piv info
+
+# Checking if Keys Match
+
+To verify is a private key and a public match, use this:
+
+    # match if no differences and exit code of 0
+    $ diff <(ssh-keygen -l -v -f $sshkeyfile) <(ssh-keygen -l -v -f $sshpubfile)
+
+To see if a public key matches the private key stored in a Yubikey slot, you
+first need to dump all of the public keys stored in the yubikey. This can be
+done with the following command:
+
+    $ ssh-keygen -D /usr/lib/x86_64-linux-gnu/libykcs11.so -e
+
+Then you can compare against another public key, but this is probably not
+needed since now you have the public keys of the private keys in the Yubikey
+and can just use them.
+
+# Required Dependencies
+
+Run the following command to install basic tool dependencies needed for these
+scripts:
+
+    $ sudo apt install ykcs11 yubico-piv-tool yubikey-manager libyubikey-udev

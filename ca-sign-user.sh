@@ -8,11 +8,22 @@ USER_PUB="${USER_KEY}.pub"
 
 mkdir -p keys-user
 
-ssh-keygen -t ed25519 -f ${USER_KEY}
+OPTS=(
+    -O no-user-rc
+    # -O no-pty
+    #-O no-agent-forwarding
+    #-O no-port-forwarding
+    #-O no-x11-forwarding
+    #-O force-command='/home/troth/bin/ollama-run.sh'
 
-ssh-keygen \
     -s "${CA_PUB}" \
     -D "${PKCS11}" \
-    -I foo \
-    -V '-4d:+8d' \
-    -n ${USER} "${USER_PUB}"
+    -I "${USER}@bozoland.org" \
+    -n troth \
+    -V '+1d' \
+)
+
+set -x
+
+ssh-keygen -t ed25519 -f ${USER_KEY}
+ssh-keygen "${OPTS[@]}" "${USER_PUB}"
