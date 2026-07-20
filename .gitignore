@@ -1,3 +1,4 @@
 /keys-ca
 /keys-user
 /keys-host
+/authorized_keys*
