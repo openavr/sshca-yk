@@ -1,11 +1,15 @@
 #!/bin/bash
 
+ORGANIZATION=${1:?Usage: $0 <org>}
+
 PUB_KEYS=(
-    keys-ca/id_ecdsa_user_ca.pub
-    keys-ca/id_ecdsa_host_ca.pub
-    keys-ca/id_ed25519_user_ca.pub
-    keys-ca/id_ed25519_host_ca.pub
+    keys-ca/${ORGANIZATION}/id_ecdsa_user_ca.pub
+    keys-ca/${ORGANIZATION}/id_ecdsa_host_ca.pub
+    keys-ca/${ORGANIZATION}/id_ed25519_user_ca.pub
+    keys-ca/${ORGANIZATION}/id_ed25519_host_ca.pub
 )
+
+AUTH_KEYS_FILE=keys-ca/${ORGANIZATION}/authorized_keys_ca
 
 declare -A CA_KEYS
 declare -A CA_COMMENTS
@@ -46,4 +50,4 @@ function process_yk_key() {
 while read -a key_info
 do
     process_yk_key "${key_info[@]}"
-done < <(ssh-keygen -D /usr/lib/x86_64-linux-gnu/libykcs11.so) >authorized_keys_ca
+done < <(ssh-keygen -D /usr/lib/x86_64-linux-gnu/libykcs11.so) >${AUTH_KEYS_FILE}

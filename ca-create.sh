@@ -5,6 +5,11 @@
 # Use ED25519 and ECDSA key types for user and host CA keys.
 #
 
+function usage() {
+    echo "Usage: $0 <org> <common_name>"
+    exit 1
+}
+
 KEY_TYPES=(
     ed25519
     ecdsa
@@ -14,6 +19,27 @@ CA_TYPES=(
     user
     host
 )
+
+declare -A SLOTS=(
+    [ecdsa-user]="82"
+    [ecdsa-host]="83"
+    [ed25519-user]="84"
+    [ed25519-host]="85"
+)
+
+ORGANIZATION="$1"
+COMMON_NAME="$2"
+
+if [ -z "${ORGANIZATION}" ] || [ -z "${COMMON_NAME}" ]
+then
+    usage
+fi
+
+TTL_DAYS="90"
+
+DEF_PIN="123456"
+DEF_PUK="12345678"
+DEF_MGMT="010203040506070801020304050607080102030405060708"
 
 IFS= read -s -p "Enter Passphrase: " PASSPHRASE
 echo ""
@@ -25,21 +51,6 @@ then
     echo "ERROR: passphrases do not match"
     exit 1
 fi
-
-declare -A SLOTS=(
-    [ecdsa-user]="82"
-    [ecdsa-host]="83"
-    [ed25519-user]="84"
-    [ed25519-host]="85"
-)
-
-ORGANIZATION="${ORGANIZATION:-openavr.org}"
-
-TTL_DAYS="90"
-
-DEF_PIN="123456"
-DEF_PUK="12345678"
-DEF_MGMT="010203040506070801020304050607080102030405060708"
 
 function create_ca_key()
 {
@@ -73,19 +84,19 @@ function init_key()
     # Key Type
     local KT="${2}"
 
-    local OPENSSH_KEY="keys-ca/id_${KT}_${CT}_ca"
-    local OPENSSH_PUB="keys-ca/id_${KT}_${CT}_ca.pub"
-    local OPENSSL_KEY="keys-ca/id_${KT}_${CT}_ca_key.pem"
-    local OPENSSL_PUB="keys-ca/id_${KT}_${CT}_ca_pub.pem"
+    local OPENSSH_KEY="keys-ca/${ORGANIZATION}/id_${KT}_${CT}_ca"
+    local OPENSSH_PUB="keys-ca/${ORGANIZATION}/id_${KT}_${CT}_ca.pub"
+    local OPENSSL_KEY="keys-ca/${ORGANIZATION}/id_${KT}_${CT}_ca_key.pem"
+    local OPENSSL_PUB="keys-ca/${ORGANIZATION}/id_${KT}_${CT}_ca_pub.pem"
 
     # Capitalize with ${VAR^}
     # Upper case with ${VAR^^}
 
-    local SUBJECT="CN=${CT^} SSH CA,O=${ORGANIZATION}"
+    local SUBJECT="CN=${COMMON_NAME} ${CT^} SSH CA,O=${ORGANIZATION}"
     local SLOT="${SLOTS[${KT}-${CT}]}"
 
     if [ ! -f ${OPENSSH_KEY} ]; then
-        create_ca_key ${KT} ${OPENSSH_KEY} -C "OpenAVR ${CT^} SSH CA" || exit 1
+        create_ca_key ${KT} ${OPENSSH_KEY} -C "${COMMON_NAME} ${CT^} SSH CA" || exit 1
     fi
 
     # Convert private key to a format that can imported into Yubikey
@@ -118,7 +129,7 @@ function init_key()
 
 set -x
 
-mkdir -p keys-ca
+mkdir -p keys-ca/${ORGANIZATION}
 
 for ca_type in "${CA_TYPES[@]}"
 do
