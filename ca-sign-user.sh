@@ -1,29 +1,36 @@
 #!/bin/bash
 
-CA_PUB="${1:-keys-ca/id_ed25519_user_ca.pub}"
+USR="${1-${USER}}"
+
+CA_PUB="${CA_PUB:-keys-ca/id_ed25519_user_ca.pub}"
+DOMAIN="${DOMAIN:-openavr.org}"
 
 PKCS11="/usr/lib/x86_64-linux-gnu/libykcs11.so"
-USER_KEY="keys-user/id_ed25519_${USER}"
+USER_KEY="keys-user/id_ed25519_${USR}"
 USER_PUB="${USER_KEY}.pub"
 
 mkdir -p keys-user
 
-OPTS=(
+SIGN_OPTS=(
+    -s "${CA_PUB}"
+    -D "${PKCS11}"
+    -I "${USR}@${DOMAIN}"
+    -n ${USR}
+    -V '+1d'
+
     -O no-user-rc
     # -O no-pty
-    #-O no-agent-forwarding
-    #-O no-port-forwarding
-    #-O no-x11-forwarding
-    #-O force-command='/home/troth/bin/ollama-run.sh'
-
-    -s "${CA_PUB}" \
-    -D "${PKCS11}" \
-    -I "${USER}@bozoland.org" \
-    -n troth \
-    -V '+1d' \
+    # -O no-agent-forwarding
+    # -O no-port-forwarding
+    # -O no-x11-forwarding
+    # -O force-command='/usr/bin/uptime'
+    "${USER_PUB}"
 )
 
 set -x
 
+# Generate a new key
 ssh-keygen -t ed25519 -f ${USER_KEY}
-ssh-keygen "${OPTS[@]}" "${USER_PUB}"
+
+# Sign a certificate for the new key
+ssh-keygen "${SIGN_OPTS[@]}"
