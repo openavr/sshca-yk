@@ -1,9 +1,15 @@
 #!/bin/bash
 
-USR="${1-${USER}}"
+DOMAIN="${1}"
+USR="${2}"
 
-CA_PUB="${CA_PUB:-keys-ca/id_ed25519_user_ca.pub}"
-DOMAIN="${DOMAIN:-openavr.org}"
+if [ -z "${DOMAIN}" ] || [ -z "${USR}" ]
+then
+    echo "Usage: $0 <domain> <user>"
+    exit 1
+fi
+
+CA_PUB="${CA_PUB:-keys-ca/${DOMAIN}/id_ed25519_user_ca.pub}"
 
 PKCS11="/usr/lib/x86_64-linux-gnu/libykcs11.so"
 USER_KEY="keys-user/id_ed25519_${USR}"
