@@ -2,17 +2,17 @@
 
 DOMAIN="${1}"
 USR="${2}"
+USER_KEY="${3:-keys-user/id_ed25519_${USR}}"
 
 if [ -z "${DOMAIN}" ] || [ -z "${USR}" ]
 then
-    echo "Usage: $0 <domain> <user>"
+    echo "Usage: $0 <domain> <user> [<user-key>]"
     exit 1
 fi
 
 CA_PUB="${CA_PUB:-keys-ca/${DOMAIN}/id_ed25519_user_ca.pub}"
 
 PKCS11="/usr/lib/x86_64-linux-gnu/libykcs11.so"
-USER_KEY="keys-user/id_ed25519_${USR}"
 USER_PUB="${USER_KEY}.pub"
 
 mkdir -p keys-user
