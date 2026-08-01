@@ -84,10 +84,10 @@ function init_key()
     # Key Type
     local KT="${2}"
 
-    local OPENSSH_KEY="keys-ca/${ORGANIZATION}/id_${KT}_${CT}_ca"
-    local OPENSSH_PUB="keys-ca/${ORGANIZATION}/id_${KT}_${CT}_ca.pub"
-    local OPENSSL_KEY="keys-ca/${ORGANIZATION}/id_${KT}_${CT}_ca_key.pem"
-    local OPENSSL_PUB="keys-ca/${ORGANIZATION}/id_${KT}_${CT}_ca_pub.pem"
+    local OPENSSH_KEY="keys-ca/${ORGANIZATION}/ssh_ca_${CT}_${KT}"
+    local OPENSSH_PUB="keys-ca/${ORGANIZATION}/ssh_ca_${CT}_${KT}.pub"
+    local OPENSSL_KEY="keys-ca/${ORGANIZATION}/ssh_ca_${CT}_${KT}_key.pem"
+    local OPENSSL_PUB="keys-ca/${ORGANIZATION}/ssh_ca_${CT}_${KT}_pub.pem"
 
     # Capitalize with ${VAR^}
     # Upper case with ${VAR^^}

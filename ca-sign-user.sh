@@ -10,7 +10,7 @@ then
     exit 1
 fi
 
-CA_PUB="${CA_PUB:-keys-ca/${DOMAIN}/id_ed25519_user_ca.pub}"
+CA_PUB="${CA_PUB:-keys-ca/${DOMAIN}/ssh_ca_user_ed25519.pub}"
 
 PKCS11="/usr/lib/x86_64-linux-gnu/libykcs11.so"
 USER_PUB="${USER_KEY}.pub"
