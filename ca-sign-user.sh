@@ -11,15 +11,15 @@ then
 fi
 
 CA_PUB="${CA_PUB:-keys-ca/${DOMAIN}/ssh_ca_user_ed25519.pub}"
+PKCS11_MODULE="${PKCS11_MODULE:-/usr/lib/x86_64-linux-gnu/libykcs11.so}"
 
-PKCS11="/usr/lib/x86_64-linux-gnu/libykcs11.so"
 USER_PUB="${USER_KEY}.pub"
 
 mkdir -p keys-user
 
 SIGN_OPTS=(
     -s "${CA_PUB}"
-    -D "${PKCS11}"
+    -D "${PKCS11_MODULE}"
     -I "${USR}@${DOMAIN}"
     -n ${USR}
     -V '+1d'

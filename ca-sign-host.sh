@@ -11,13 +11,12 @@ then
 fi
 
 CA_PUB="${CA_PUB:-keys-ca/${DOMAIN}/ssh_ca_host_ed25519.pub}"
-
-PKCS11="/usr/lib/x86_64-linux-gnu/libykcs11.so"
+PKCS11_MODULE="${PKCS11_MODULE:-/usr/lib/x86_64-linux-gnu/libykcs11.so}"
 
 SIGN_OPTS=(
     -h
     -s "${CA_PUB}"
-    -D "${PKCS11}"
+    -D "${PKCS11_MODULE}"
     -I "${HOST}.${DOMAIN}"
     -n "${HOST}.${DOMAIN},${HOST}"
     -V '+52w'
