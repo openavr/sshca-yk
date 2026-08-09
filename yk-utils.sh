@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-#
+# Utility functions for interacting with a Yubikey with the ykman tool.
 #
 
 DEF_PIN="123456"
