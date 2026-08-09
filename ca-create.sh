@@ -76,45 +76,47 @@ function create_ca_key()
 
 function init_key()
 {
-    # CA Type: Force CT to be fully lower case with ${VAR,,}
-    local CT="${1,,}"
+    local CT="${1}"   # CA Type
+    local KT="${2}"   # Key Type
+    local KEY_BASE="${3}"
 
-    # Key Type
-    local KT="${2}"
-
-    local OPENSSH_KEY="keys-ca/${ORGANIZATION}/ssh_ca_${CT}_${KT}"
-    local OPENSSH_PUB="keys-ca/${ORGANIZATION}/ssh_ca_${CT}_${KT}.pub"
-    local OPENSSL_KEY="keys-ca/${ORGANIZATION}/ssh_ca_${CT}_${KT}_key.pem"
-    local OPENSSL_PUB="keys-ca/${ORGANIZATION}/ssh_ca_${CT}_${KT}_pub.pem"
-
-    # Capitalize with ${VAR^}
-    # Upper case with ${VAR^^}
+    local OPENSSH_KEY="${KEY_BASE}"
+    local OPENSSH_PUB="${KEY_BASE}.pub"
+    local YK_KEY="${KEY_BASE}_key.pem"
+    local YK_PUB="${KEY_BASE}_pub.pem"
 
     local SUBJECT="CN=${COMMON_NAME} ${CT^} SSH CA,O=${ORGANIZATION}"
     local SLOT="${SLOTS[${KT}-${CT}]}"
 
     if [[ ! -f ${OPENSSH_KEY} ]]; then
-        create_ca_key ${KT} ${OPENSSH_KEY} -C "${COMMON_NAME} ${CT^} SSH CA" || exit 1
+        # Capitalize with ${VAR^}
+        # Upper case with ${VAR^^}
+        create_ca_key ${KT} ${OPENSSH_KEY} -C "${COMMON_NAME} ${CT^} SSH CA" \
+            || exit 1
     fi
 
     # Convert private key to a format that can imported into Yubikey
-    cp ${OPENSSH_KEY} ${OPENSSL_KEY} || exit 1
-    ssh-keygen -p -m PKCS8 -N "${PASSPHRASE}" -P "${PASSPHRASE}" -f ${OPENSSL_KEY} || exit 1
+    cp ${OPENSSH_KEY} ${YK_KEY} || exit 1
+    ssh-keygen -p -m PKCS8 -N "${PASSPHRASE}" -P "${PASSPHRASE}" -f ${YK_KEY} \
+        || exit 1
 
-    yk_import_key ${SLOT} ${OPENSSL_KEY} || exit 1
-    yk_export_key ${SLOT} ${OPENSSL_PUB} || exit 1
-    yk_generate_cert "${SUBJECT}" ${TTL_DAYS} ${SLOT} ${OPENSSL_PUB} || exit 1
+    yk_import_key ${SLOT} ${YK_KEY} || exit 1
+    yk_export_key ${SLOT} ${YK_PUB} || exit 1
+    yk_generate_cert "${SUBJECT}" ${TTL_DAYS} ${SLOT} ${YK_PUB} || exit 1
 }
 
 if yk_select
 then
-    mkdir -p keys-ca/${ORGANIZATION}
+    KEY_DIR="keys-ca/${ORGANIZATION}"
+    mkdir -p "${KEY_DIR}"
 
     for ca_type in "${CA_TYPES[@]}"
     do
         for key_type in "${KEY_TYPES[@]}"
         do
-            init_key "${ca_type}" "${key_type}"
+            key_base="${KEY_DIR}/ssh_ca_${ca_type}_${key_type}"
+
+            init_key "${ca_type}" "${key_type}" "${key_base}"
         done
     done
 
