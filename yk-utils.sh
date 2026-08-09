@@ -176,15 +176,15 @@ function yk_generate_cert() {
 
 function yk_main() {
     # Not sourced, so perform the yk selection
-    if ! yk_select
+    if yk_select
     then
+        set -x
+        yk_cmd piv info
+    else
         rc=$?
         echo "Goodbye!"
         exit ${rc}
     fi
-
-    set -x
-    yk_cmd piv info
 }
 
 #

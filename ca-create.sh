@@ -106,16 +106,17 @@ function init_key()
     yk_generate_cert "${SUBJECT}" ${TTL_DAYS} ${SLOT} ${OPENSSL_PUB} || exit 1
 }
 
-set -x
+if yk_select
+then
+    mkdir -p keys-ca/${ORGANIZATION}
 
-mkdir -p keys-ca/${ORGANIZATION}
-
-for ca_type in "${CA_TYPES[@]}"
-do
-    for key_type in "${KEY_TYPES[@]}"
+    for ca_type in "${CA_TYPES[@]}"
     do
-        init_key "${ca_type}" "${key_type}"
+        for key_type in "${KEY_TYPES[@]}"
+        do
+            init_key "${ca_type}" "${key_type}"
+        done
     done
-done
 
-ykman piv info
+    ykman piv info
+fi
