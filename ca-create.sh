@@ -6,9 +6,19 @@
 #
 
 function usage() {
-    echo "Usage: $0 <org> <common_name>"
+    echo "Usage: $0 <org-domain> <org-common-name>"
     exit 1
 }
+
+ORGANIZATION="$1"
+COMMON_NAME="$2"
+
+if [[ -z "${ORGANIZATION}" ]] || [[ -z "${COMMON_NAME}" ]]
+then
+    usage
+fi
+
+TTL_DAYS="90"
 
 KEY_TYPES=(
     ed25519
@@ -26,16 +36,6 @@ declare -A SLOTS=(
     [ed25519-user]="84"
     [ed25519-host]="85"
 )
-
-ORGANIZATION="$1"
-COMMON_NAME="$2"
-
-if [[ -z "${ORGANIZATION}" ]] || [[ -z "${COMMON_NAME}" ]]
-then
-    usage
-fi
-
-TTL_DAYS="90"
 
 source ./yk-utils.sh
 
