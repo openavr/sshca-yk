@@ -1,0 +1,18 @@
+#!/bin/bash
+
+source ./yk-utils.sh
+
+declare -F
+
+yk_select || {
+    echo "Goodbye!"
+    exit 1
+}
+
+yk_cmd info
+
+yk_get_access_codes
+yk_cmd piv info
+yk_cmd piv reset
+
+yk_change_access
