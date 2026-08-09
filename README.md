@@ -16,12 +16,12 @@ First, clone this repo to the server system:
 
 To generate the User and Host SSH CA keys and load them into a Yubikey:
 
-    Usage: ./ca-create.sh <org> <common-name>
+    Usage: ./ca-create.sh <org-domain> <org-common-name>
 
-For example, for the `example.com` domain, with a common name of `TestExample`
+For example, for the `example.com` domain, with a common name of `Example Inc`
 (this will prompt you to enter the passphrase for the keys):
 
-    $ ./ca-create.sh example.com TestExample
+    $ ./ca-create.sh example.com 'Example Inc'
 
 The generated private keys are now on-disk and in the Yubikey. The on-disk
 copies must be protected and not shared.
@@ -33,13 +33,29 @@ Verify the contents of the Yubikey:
     Slot 84 (RETIRED3):
       Private key type: ED25519
       Public key type:  ED25519
-      Subject DN:       CN=TestExample User SSH CA,O=example.com
-      Issuer DN:        CN=TestExample User SSH CA,O=example.com
-      Serial:           52:1e:44:b0:ca:80:5c:11:75:6e:48:c7:1a:d8:a4:ce:83:d8:5c:1c
-      Fingerprint:      77348c2ff32ecc7b5ea8820a0a22509bb1a97c02c67ea8f02af582bd06ac12bc
-      Not before:       2026-07-26T19:21:16+00:00
-      Not after:        2026-10-24T19:21:16+00:00
+      Subject DN:       CN=Example Inc User SSH CA,O=example.com
+      Issuer DN:        CN=Example Inc User SSH CA,O=example.com
+      Serial:           54:6d:90:a7:42:e7:56:d1:ae:92:e3:84:a4:82:33:48:a6:ec:16:82
+      Fingerprint:      7fa671502d10506db173093e36fae5fcf4a0062de946037903e564080e041867
+      Not before:       2026-08-09T16:10:31+00:00
+      Not after:        2026-11-07T16:10:31+00:00
     ...
+
+Set the PIV access codes on the Yubikey so that they are not the default
+values:
+
+    $ ./ca-yk-set-access.sh
+
+You can setup another Yubikey with the same keys by plugging in a different
+yubikey and repeating the process:
+
+    $ ./ca-create.sh example.com 'Example Inc'
+    $ ./ca-yk-set-access.sh
+
+Running the `ca-create.sh` multiple times will not generate new keys given the
+same arguments, but note that it will fail if run again after the PIV access
+codes have been changed on the yubikey due to the defaults no longer being
+usable.
 
 Generate an `authorized_keys_ca` file that has entries you can copy to your
 `~/.ssh/authorized_keys` file on the server that you want to allow users to log
@@ -48,7 +64,8 @@ into using certificates:
     $ ./generate-auth-keys.sh example.org
 
 The generated `authorized_keys_ca` can be copied to any server as it does not
-contain any sensitive material.
+contain any sensitive material. You can also copy only the keys entries that
+you desire from the `authorized_keys_ca` file instead of using theentire file.
 
 ## Server Side User SSH CA Setup
 
