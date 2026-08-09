@@ -30,7 +30,7 @@ declare -A SLOTS=(
 ORGANIZATION="$1"
 COMMON_NAME="$2"
 
-if [ -z "${ORGANIZATION}" ] || [ -z "${COMMON_NAME}" ]
+if [[ -z "${ORGANIZATION}" ]] || [[ -z "${COMMON_NAME}" ]]
 then
     usage
 fi
@@ -46,7 +46,7 @@ echo ""
 IFS= read -s -p "Enter Passphrase again: " PASSPHRASE_VERIFY
 echo ""
 
-if [ "${PASSPHRASE}" != "${PASSPHRASE_VERIFY}" ]
+if [[ "${PASSPHRASE}" != "${PASSPHRASE_VERIFY}" ]]
 then
     echo "ERROR: passphrases do not match"
     exit 1
@@ -95,7 +95,7 @@ function init_key()
     local SUBJECT="CN=${COMMON_NAME} ${CT^} SSH CA,O=${ORGANIZATION}"
     local SLOT="${SLOTS[${KT}-${CT}]}"
 
-    if [ ! -f ${OPENSSH_KEY} ]; then
+    if [[ ! -f ${OPENSSH_KEY} ]]; then
         create_ca_key ${KT} ${OPENSSH_KEY} -C "${COMMON_NAME} ${CT^} SSH CA" || exit 1
     fi
 

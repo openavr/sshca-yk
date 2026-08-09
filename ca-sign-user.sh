@@ -4,7 +4,7 @@ DOMAIN="${1}"
 USR="${2}"
 USER_KEY="${3:-keys-user/id_ed25519_${USR}}"
 
-if [ -z "${DOMAIN}" ] || [ -z "${USR}" ]
+if [[ -z "${DOMAIN}" ]] || [[ -z "${USR}" ]]
 then
     echo "Usage: $0 <domain> <user> [<user-key>]"
     exit 1

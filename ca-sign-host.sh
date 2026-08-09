@@ -4,7 +4,7 @@ HOST="${1}"
 DOMAIN="${2}"
 HOST_PUB="${3}"
 
-if [ -z "${HOST}" ] || [ -z "${DOMAIN}" ] || [ -z "${HOST_PUB}" ]
+if [[ -z "${HOST}" ]] || [[ -z "${DOMAIN}" ]] || [[ -z "${HOST_PUB}" ]]
 then
     echo "Usage: $0 <hostname> <domain> <server-pub-key>"
     exit 1
