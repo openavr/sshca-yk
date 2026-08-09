@@ -37,9 +37,7 @@ fi
 
 TTL_DAYS="90"
 
-DEF_PIN="123456"
-DEF_PUK="12345678"
-DEF_MGMT="010203040506070801020304050607080102030405060708"
+source ./yk-utils.sh
 
 IFS= read -s -p "Enter Passphrase: " PASSPHRASE
 echo ""
@@ -103,28 +101,9 @@ function init_key()
     cp ${OPENSSH_KEY} ${OPENSSL_KEY} || exit 1
     ssh-keygen -p -m PKCS8 -N "${PASSPHRASE}" -P "${PASSPHRASE}" -f ${OPENSSL_KEY} || exit 1
 
-    # Import the private key into the yubikey.
-    ykman piv keys import \
-        -m "${DEF_MGMT}" \
-        -p "${PASSPHRASE}" \
-        ${SLOT} ${OPENSSL_KEY} || exit 1
-
-    # Extract the public key from the yubikey.
-    ykman piv keys export \
-        ${SLOT} ${OPENSSL_PUB} || exit 1
-
-    # Convert openssl pub to openssh pub format.
-    #ssh-keygen -i -m PKCS8 -f ${OPENSSL_PUB} > ${OPENSSH_PUB}
-
-    # Create a self-signed cert in the yubikey.
-    # This cert is not used by ssh tools, is only needed by the PIV
-    # application in the yubikey.
-    ykman piv certificates generate \
-        -P "${DEF_PIN}" \
-        -m "${DEF_MGMT}" \
-        -s "${SUBJECT}" \
-        -d ${TTL_DAYS} \
-        ${SLOT} ${OPENSSL_PUB} || exit 1
+    yk_import_key ${SLOT} ${OPENSSL_KEY} || exit 1
+    yk_export_key ${SLOT} ${OPENSSL_PUB} || exit 1
+    yk_generate_cert "${SUBJECT}" ${TTL_DAYS} ${SLOT} ${OPENSSL_PUB} || exit 1
 }
 
 set -x
