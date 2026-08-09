@@ -67,6 +67,31 @@ The generated `authorized_keys_ca` can be copied to any server as it does not
 contain any sensitive material. You can also copy only the keys entries that
 you desire from the `authorized_keys_ca` file instead of using theentire file.
 
+## Signing User or Host Keys
+
+Generate user certificates with either of the following:
+
+    $ ./ca-sign-user.sh example.com jsmith
+    $ ./ca-sign-user.sh example.com jsmith ~/.ssh/id_ed25519_jsmith
+
+Generate host certificates with:
+
+    $ ./ca-sign-host.sh myserver example.com /etc/ssh/ssh_host_ed25519_key.pub
+
+### Signing Using a SSH Agent
+
+You can also make use of an SSH agent to ease signing operations. Loading the
+`pkcs#11` module into the agent with `ssh-add`:
+
+    $ ssh-add -s /usr/lib/x86_64-linux-gnu/libykcs11.so
+
+That will ask for the PIN to unlock the keys in the Yubikey and subsequent
+invocations of the signing scripts will not ask you to re-enter the PIN.
+
+Remove the keys from the agent with:
+
+    $ ssh-add -e /usr/lib/x86_64-linux-gnu/libykcs11.so
+
 ## Server Side User SSH CA Setup
 
 Copy the `User SSH CA` line from the generated `authorized_keys_ca` file into

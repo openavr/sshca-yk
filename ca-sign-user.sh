@@ -20,9 +20,16 @@ USER_PUB="${USER_KEY}.pub"
 
 mkdir -p keys-user
 
+if ssh-add -T "${CA_PUB}"
+then
+    SIGN_OPTS_EXTRA=( -U )
+else
+    SIGN_OPTS_EXTRA=( -D "${PKCS11_MODULE}" )
+fi
+
 SIGN_OPTS=(
+    "${SIGN_OPTS_EXTRA[@]}"
     -s "${CA_PUB}"
-    -D "${PKCS11_MODULE}"
     -I "${USR}@${DOMAIN}"
     -n "${PRINCIPALS}"
     -V "${VALIDITY}"

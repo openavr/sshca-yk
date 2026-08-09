@@ -15,10 +15,17 @@ PKCS11_MODULE="${PKCS11_MODULE:-/usr/lib/x86_64-linux-gnu/libykcs11.so}"
 
 VALIDITY="${VALIDITY:-+52w}"
 
+if ssh-add -T "${CA_PUB}"
+then
+    SIGN_OPTS_EXTRA=( -U )
+else
+    SIGN_OPTS_EXTRA=( -D "${PKCS11_MODULE}" )
+fi
+
 SIGN_OPTS=(
     -h
+    "${SIGN_OPTS_EXTRA[@]}"
     -s "${CA_PUB}"
-    -D "${PKCS11_MODULE}"
     -I "${HOST}.${DOMAIN}"
     -n "${HOST}.${DOMAIN},${HOST}"
     -V "${VALIDITY}"
