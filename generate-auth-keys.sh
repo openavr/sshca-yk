@@ -1,12 +1,12 @@
 #!/bin/bash
 
-ORGANIZATION=${1:?Usage: $0 <org>}
+ORGANIZATION=${1:?Usage: $0 <org-domain>}
 
 PUB_KEYS=(
-    keys-ca/${ORGANIZATION}/id_ecdsa_user_ca.pub
-    keys-ca/${ORGANIZATION}/id_ecdsa_host_ca.pub
-    keys-ca/${ORGANIZATION}/id_ed25519_user_ca.pub
-    keys-ca/${ORGANIZATION}/id_ed25519_host_ca.pub
+    keys-ca/${ORGANIZATION}/ssh_ca_user_ecdsa.pub
+    keys-ca/${ORGANIZATION}/ssh_ca_host_ecdsa.pub
+    keys-ca/${ORGANIZATION}/ssh_ca_user_ed25519.pub
+    keys-ca/${ORGANIZATION}/ssh_ca_host_ed25519.pub
 )
 
 AUTH_KEYS_FILE=keys-ca/${ORGANIZATION}/authorized_keys_ca
