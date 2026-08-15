@@ -20,7 +20,7 @@ USER_PUB="${USER_KEY}.pub"
 
 mkdir -p keys-user
 
-if ssh-add -T "${CA_PUB}"
+if ssh-add -T "${CA_PUB}" 2>/dev/null
 then
     SIGN_OPTS_EXTRA=( -U )
 else
