@@ -95,6 +95,8 @@ function init_key()
         # Upper case with ${VAR^^}
         create_ca_key ${KT} ${OPENSSH_KEY} -C "${COMMON_NAME} ${CT^} SSH CA" \
             || exit 1
+    else
+        echo "NOTE: Using existing key: ${OPENSSH_KEY}" 1>&2
     fi
 
     # Convert private key to a format that can imported into Yubikey

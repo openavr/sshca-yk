@@ -34,7 +34,7 @@ function yk_select() {
     done < <(ykman list)
 
     if [[ ${#YK_DEVICES[@]} -eq 0 ]]; then
-        echo "Please insert a Yubikey, none found"
+        echo "Please insert a Yubikey, none found" 1>&2
         return 1
     elif [[ ${#YK_DEVICES[@]} -eq 1 ]]; then
         YK_SN="${YK_DEVICES[@]}"
@@ -90,6 +90,7 @@ function yk_load_access_codes() {
     if [[ -e ${YK_CFG} ]]; then
         source ${YK_CFG}
     else
+        echo "ERROR: Config not found: ${YK_CFG}" 1>&2
         return 1
     fi
 }
