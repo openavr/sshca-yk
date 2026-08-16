@@ -10,8 +10,10 @@ function usage() {
     exit 1
 }
 
-ORGANIZATION="$1"
-COMMON_NAME="$2"
+# NOTE: Putting commas (',') in these will cause the certificate generation in
+#       the Yubikey to fail, so remove them here.
+ORGANIZATION="${1//,/}"
+COMMON_NAME="${2//,/}"
 
 if [[ -z "${ORGANIZATION}" ]] || [[ -z "${COMMON_NAME}" ]]
 then
