@@ -45,8 +45,5 @@ SIGN_OPTS=(
 
 set -x
 
-# Generate a new key
-ssh-keygen -t ed25519 -f ${USER_KEY}
-
 # Sign a certificate for the new key
 ssh-keygen "${SIGN_OPTS[@]}"
