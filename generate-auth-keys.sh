@@ -1,4 +1,8 @@
 #!/bin/bash
+#
+# Generate an `authorized_key_ca` file from the keys and certs stored in a
+# yubikey.
+#
 
 ORGANIZATION=${1:?Usage: $0 <org-domain>}
 
