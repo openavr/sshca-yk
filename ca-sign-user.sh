@@ -13,6 +13,7 @@ fi
 CA_PUB="${CA_PUB:-keys-ca/${ORG_DOMAIN}/ssh_ca_user_ed25519.pub}"
 PKCS11_MODULE="${PKCS11_MODULE:-/usr/lib/x86_64-linux-gnu/libykcs11.so}"
 
+CERT_IDENTITY="${CERT_IDENTITY:-${ORG_USER}@${ORG_DOMAIN}}"
 PRINCIPALS="${PRINCIPALS:-${ORG_USER}}"
 VALIDITY="${VALIDITY:-+1d}"
 
@@ -28,7 +29,7 @@ fi
 SIGN_OPTS=(
     "${SIGN_OPTS_EXTRA[@]}"
     -s "${CA_PUB}"
-    -I "${ORG_USER}@${ORG_DOMAIN}"
+    -I "${CERT_IDENTITY}"
     -n "${PRINCIPALS}"
     -V "${VALIDITY}"
 

@@ -13,6 +13,8 @@ fi
 CA_PUB="${CA_PUB:-keys-ca/${ORG_DOMAIN}/ssh_ca_host_ed25519.pub}"
 PKCS11_MODULE="${PKCS11_MODULE:-/usr/lib/x86_64-linux-gnu/libykcs11.so}"
 
+CERT_IDENTITY="${CERT_IDENTITY:-${HOST}.${ORG_DOMAIN}}"
+PRINCIPALS="${PRINCIPALS:-${HOST}.${ORG_DOMAIN},${HOST}}"
 VALIDITY="${VALIDITY:-+52w}"
 
 if ssh-add -T "${CA_PUB}" 2>/dev/null
@@ -26,8 +28,8 @@ SIGN_OPTS=(
     -h
     "${SIGN_OPTS_EXTRA[@]}"
     -s "${CA_PUB}"
-    -I "${HOST}.${ORG_DOMAIN}"
-    -n "${HOST}.${ORG_DOMAIN},${HOST}"
+    -I "${CERT_IDENTITY}"
+    -n "${PRINCIPALS}"
     -V "${VALIDITY}"
 
     -O no-user-rc
