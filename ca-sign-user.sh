@@ -1,22 +1,20 @@
 #!/bin/bash
 
-DOMAIN="${1}"
-USR="${2}"
-USER_KEY="${3:-keys-user/id_ed25519_${USR}}"
+ORG_DOMAIN="${1}"
+ORG_USER="${2}"
+PUBLIC_KEY="${3:-keys-user/id-ed25519-${ORG_USER}.pub}"
 
-if [[ -z "${DOMAIN}" ]] || [[ -z "${USR}" ]]
+if [[ -z "${ORG_DOMAIN}" ]] || [[ -z "${ORG_USER}" ]]
 then
-    echo "Usage: $0 <domain> <user> [<user-key>]"
+    echo "Usage: $0 <org-domain> <user> [<public-key>]"
     exit 1
 fi
 
-CA_PUB="${CA_PUB:-keys-ca/${DOMAIN}/ssh_ca_user_ed25519.pub}"
+CA_PUB="${CA_PUB:-keys-ca/${ORG_DOMAIN}/ssh_ca_user_ed25519.pub}"
 PKCS11_MODULE="${PKCS11_MODULE:-/usr/lib/x86_64-linux-gnu/libykcs11.so}"
 
-PRINCIPALS="${PRINCIPALS:-${USR}}"
+PRINCIPALS="${PRINCIPALS:-${ORG_USER}}"
 VALIDITY="${VALIDITY:-+1d}"
-
-USER_PUB="${USER_KEY}.pub"
 
 mkdir -p keys-user
 
@@ -30,7 +28,7 @@ fi
 SIGN_OPTS=(
     "${SIGN_OPTS_EXTRA[@]}"
     -s "${CA_PUB}"
-    -I "${USR}@${DOMAIN}"
+    -I "${ORG_USER}@${ORG_DOMAIN}"
     -n "${PRINCIPALS}"
     -V "${VALIDITY}"
 
@@ -40,7 +38,7 @@ SIGN_OPTS=(
     # -O no-port-forwarding
     # -O no-x11-forwarding
     # -O force-command='/usr/bin/uptime'
-    "${USER_PUB}"
+    "${PUBLIC_KEY}"
 )
 
 set -x
