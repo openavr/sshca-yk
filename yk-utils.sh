@@ -204,12 +204,13 @@ function yk_main() {
     if yk_select
     then
         set -x
-        yk_cmd piv info
-    else
-        rc=$?
-        echo "Goodbye!"
-        exit ${rc}
+        yk_cmd piv info \
+            && yk_load_access_codes \
+            && env | grep YK_
     fi
+    rc=$?
+    echo "Goodbye!"
+    exit ${rc}
 }
 
 #
