@@ -7,9 +7,9 @@ DEF_PIN="123456"
 DEF_PUK="12345678"
 DEF_MGMT="010203040506070801020304050607080102030405060708"
 
-declare NEW_PIN
-declare NEW_PUK
-declare NEW_MGMT
+declare YK_PIN
+declare YK_PUK
+declare YK_MGMT
 
 declare YK_SN
 
@@ -71,18 +71,18 @@ function yk_generate_access_codes() {
     local RAND_HEX=''
 
     while [[ ${#RAND_DEC} -le 16 ]] \
-        || [[ "${NEW_PIN}" == "${DEF_PIN}" ]] \
-        || [[ "${NEW_PUK}" == "${DEF_PUK}" ]]
+        || [[ "${YK_PIN}" == "${DEF_PIN}" ]] \
+        || [[ "${YK_PUK}" == "${DEF_PUK}" ]]
     do
         RAND_HEX=$(openssl rand -hex 16)  # Generates 32 chars in [0-9a-f] set
         RAND_DEC="${RAND_HEX//[^0-9]/}"   # Remove non-decimal digits
-        NEW_PIN="${RAND_DEC:0:8}"         # Grab the first 8 decimal digits
-        NEW_PUK="${RAND_DEC: -8}"         # Grab the last 8 decimal digits
+        YK_PIN="${RAND_DEC:0:8}"          # Grab the first 8 decimal digits
+        YK_PUK="${RAND_DEC: -8}"          # Grab the last 8 decimal digits
     done
 
-    NEW_MGMT="${DEF_MGMT}"
-    while [[ "${NEW_MGMT}" == "${DEF_MGMT}" ]]; do
-        NEW_MGMT="$(openssl rand -hex 24)"
+    YK_MGMT="${DEF_MGMT}"
+    while [[ "${YK_MGMT}" == "${DEF_MGMT}" ]]; do
+        YK_MGMT="$(openssl rand -hex 24)"
     done
 }
 
@@ -98,9 +98,9 @@ function yk_load_access_codes() {
 function yk_save_access_codes() {
     echo "YK_CFG: ${YK_CFG:?ERR: No Yubikey selected}"
     cat <<EOF > "${YK_CFG}"
-export NEW_PIN="${NEW_PIN}"
-export NEW_PUK="${NEW_PUK}"
-export NEW_MGMT="${NEW_MGMT}"
+export YK_PIN="${YK_PIN}"
+export YK_PUK="${YK_PUK}"
+export YK_MGMT="${YK_MGMT}"
 EOF
 }
 
@@ -116,22 +116,31 @@ function yk_change_access() {
     # Only try to set the PIN/PUK/MGMT if it is not already set and is
     # using the defaults
 
+    if [[ -z ${YK_PIN} ]] || [[ -z ${YK_PUK} ]] || [[ -z ${YK_MGMT} ]]
+    then
+        echo "ERROR: None of the following variables should be empty:"
+        echo "  YK_PIN='${YK_PIN}'"
+        echo "  YK_PUK='${YK_PUK}'"
+        echo "  YK_MGMT='${YK_MGMT}'"
+        exit 1
+    fi
+
     while read line
     do
         if [[ $line =~ "Using default PIN" ]]
         then
             yk_cmd piv access change-pin \
-                -P "${DEF_PIN}" -n "${NEW_PIN}" \
+                -P "${DEF_PIN}" -n "${YK_PIN}" \
                 || exit $?
         elif [[ $line =~ "Using default PUK" ]]
         then
             yk_cmd piv access change-puk \
-                -p "${DEF_PUK}" -n "${NEW_PUK}" \
+                -p "${DEF_PUK}" -n "${YK_PUK}" \
                 || exit $?
         elif [[ $line =~ "Using default Management" ]]
         then
             yk_cmd piv access change-management-key \
-                -m "${DEF_MGMT}" -n "${NEW_MGMT}" \
+                -m "${DEF_MGMT}" -n "${YK_MGMT}" \
                 || exit $?
         fi
     done < <(yk_cmd piv info \
