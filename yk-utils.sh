@@ -11,7 +11,7 @@ declare YK_PIN
 declare YK_PUK
 declare YK_MGMT
 
-declare YK_SN
+declare YK_SERNUM="${YK_SERNUM}"
 
 readonly YK_CFG_FMT='./yubikey-cfg.d/yk-%s.cfg'
 mkdir -p ./yubikey-cfg.d
@@ -21,12 +21,27 @@ readonly YKMAN=$(which ykman)
 
 function yk_cmd() {
     echo ""
-    echo "+ ${YKMAN} -d ${YK_SN:?ERR: No Yubikey selected} ${@}"
-    ${YKMAN} -d "${YK_SN}" "${@}"
+    echo "+ ${YKMAN} -d ${YK_SERNUM:?ERR: No Yubikey selected} ${@}"
+    ${YKMAN} -d "${YK_SERNUM}" "${@}"
 }
 
 function yk_select() {
     declare -A YK_DEVICES
+
+    # Serial number provided in environment, verify that the Yubikey with
+    # that serial number is actually plugged in to the system.
+    if [[ -n ${YK_SERNUM} ]]
+    then
+        if ykman list | grep -e "${YK_SERNUM}"
+        then
+            printf -v YK_CFG "${YK_CFG_FMT}" "${YK_SERNUM}"
+            return 0
+        fi
+        echo "WARN: YK_SERNUM in env is invalid: Ignoring it: ${YK_SERNUM}"
+    fi
+
+    unset YK_SERNUM
+    declare -g YK_SERNUM
 
     while read -a ykdevice
     do
@@ -37,8 +52,8 @@ function yk_select() {
         echo "Please insert a Yubikey, none found" 1>&2
         return 1
     elif [[ ${#YK_DEVICES[@]} -eq 1 ]]; then
-        YK_SN="${YK_DEVICES[@]}"
-        printf -v YK_CFG "${YK_CFG_FMT}" "${YK_SN}"
+        YK_SERNUM="${YK_DEVICES[@]}"
+        printf -v YK_CFG "${YK_CFG_FMT}" "${YK_SERNUM}"
         return 0
     fi
 
@@ -56,8 +71,8 @@ function yk_select() {
                         return 2
                         ;;
                     *)
-                        YK_SN="${YK_DEVICES[${ykdev}]}"
-                        printf -v YK_CFG "${YK_CFG_FMT}" "${YK_SN}"
+                        YK_SERNUM="${YK_DEVICES[${ykdev}]}"
+                        printf -v YK_CFG "${YK_CFG_FMT}" "${YK_SERNUM}"
                         return 0
                         ;;
                 esac
