@@ -6,6 +6,6 @@ declare -F
 
 if yk_select
 then
-    yk_cmd info
-    yk_cmd piv info
+    ykman_cmd info
+    ykman_cmd piv info
 fi

@@ -19,7 +19,7 @@ declare YK_CFG
 
 readonly YKMAN=$(which ykman)
 
-function yk_cmd() {
+function ykman_cmd() {
     echo ""
     echo "+ ${YKMAN} -d ${YK_SERNUM:?ERR: No Yubikey selected} ${@}"
     ${YKMAN} -d "${YK_SERNUM}" "${@}"
@@ -32,7 +32,7 @@ function yk_select() {
     # that serial number is actually plugged in to the system.
     if [[ -n ${YK_SERNUM} ]]
     then
-        if ykman list | grep -e "${YK_SERNUM}"
+        if ${YKMAN} list | grep -e "${YK_SERNUM}"
         then
             printf -v YK_CFG "${YK_CFG_FMT}" "${YK_SERNUM}"
             return 0
@@ -46,7 +46,7 @@ function yk_select() {
     while read -a ykdevice
     do
         YK_DEVICES["${ykdevice[*]}"]="${ykdevice[-1]}"
-    done < <(ykman list)
+    done < <(${YKMAN} list)
 
     if [[ ${#YK_DEVICES[@]} -eq 0 ]]; then
         echo "Please insert a Yubikey, none found" 1>&2
@@ -144,21 +144,21 @@ function yk_change_access() {
     do
         if [[ $line =~ "Using default PIN" ]]
         then
-            yk_cmd piv access change-pin \
+            ykman_cmd piv access change-pin \
                 -P "${DEF_PIN}" -n "${YK_PIN}" \
                 || exit $?
         elif [[ $line =~ "Using default PUK" ]]
         then
-            yk_cmd piv access change-puk \
+            ykman_cmd piv access change-puk \
                 -p "${DEF_PUK}" -n "${YK_PUK}" \
                 || exit $?
         elif [[ $line =~ "Using default Management" ]]
         then
-            yk_cmd piv access change-management-key \
+            ykman_cmd piv access change-management-key \
                 -m "${DEF_MGMT}" -n "${YK_MGMT}" \
                 || exit $?
         fi
-    done < <(yk_cmd piv info \
+    done < <(ykman_cmd piv info \
         | grep -E 'WARNING: Using default (PIN|PUK|Management)')
 }
 
@@ -167,7 +167,7 @@ function yk_import_key() {
     PRIV_KEY="${2}"
 
     # Import the private key into the yubikey.
-    yk_cmd piv keys import \
+    ykman_cmd piv keys import \
         -m "${DEF_MGMT}" \
         -p "${PASSPHRASE}" \
         ${SLOT} ${PRIV_KEY}
@@ -178,7 +178,7 @@ function yk_export_key() {
     PUBLIC_KEY="${2}"
 
     # Extract the public key from the yubikey.
-    yk_cmd piv keys export \
+    ykman_cmd piv keys export \
         ${SLOT} ${PUBLIC_KEY}
 }
 
@@ -191,7 +191,7 @@ function yk_generate_cert() {
     # Create a self-signed cert in the yubikey.
     # This cert is not used by ssh tools, is only needed by the PIV
     # application in the yubikey.
-    yk_cmd piv certificates generate \
+    ykman_cmd piv certificates generate \
         -P "${DEF_PIN}" \
         -m "${DEF_MGMT}" \
         -s "${SUBJECT}" \
@@ -204,7 +204,7 @@ function yk_main() {
     if yk_select
     then
         set -x
-        yk_cmd piv info \
+        ykman_cmd piv info \
             && yk_load_access_codes \
             && env | grep YK_
     fi
