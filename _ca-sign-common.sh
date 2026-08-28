@@ -20,6 +20,21 @@ SIGN_OPTS+=(
     "${PUBLIC_KEY}"
 )
 
+if [[ ! -e ${PUBLIC_KEY} ]]
+then
+    KEY=${PUBLIC_KEY%%.pub}
+    echo "ERROR: Missing public key: ${PUBLIC_KEY}"
+    echo "Consider creating keypair with:"
+    if [[ ${PUBLIC_KEY} =~ ed25519 ]]; then
+        echo "    ssh-keygen -t ed25519 -f ${PUBLIC_KEY%%.pub}"
+    elif [[ ${PUBLIC_KEY} =~ ecdsa ]]; then
+        echo "    ssh-keygen -t ecdsa -b 384 -f ${PUBLIC_KEY%%.pub}"
+    else
+        echo "    ssh-keygen -f ${PUBLIC_KEY%%.pub}"
+    fi
+    exit 1
+fi
+
 set -x
 
 # Sign a certificate for the new key
