@@ -111,6 +111,11 @@ function init_key()
 
 if yk_select
 then
+    if yk_load_access_codes
+    then
+        yk_select_access_codes
+    fi
+
     KEY_DIR="keys-ca/${ORGANIZATION}"
     mkdir -p "${KEY_DIR}"
 
@@ -124,5 +129,5 @@ then
         done
     done
 
-    ykman piv info
+    ykman_cmd piv info
 fi

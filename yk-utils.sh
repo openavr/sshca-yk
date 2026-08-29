@@ -162,13 +162,42 @@ function yk_change_access() {
         | grep -E 'WARNING: Using default (PIN|PUK|Management)')
 }
 
+# If the access codes have been loaded from the cfg file, try to use those
+# access codes unless the Yubikey device has been reset and the default access
+# codes are still active.
+
+function yk_select_access_codes() {
+    declare -g YK_AC_PIN=${YK_PIN}
+    declare -g YK_AC_PUK=${YK_PUK}
+    declare -g YK_AC_MGMT=${YK_MGMT}
+
+    while read line
+    do
+        if [[ $line =~ "Using default PIN" ]]
+        then
+            YK_AC_PIN=${DEF_PIN}
+        elif [[ $line =~ "Using default PUK" ]]
+        then
+            YK_AC_PUK=${DEF_PUK}
+        elif [[ $line =~ "Using default Management" ]]
+        then
+            YK_AC_MGMT=${DEF_MGMT}
+        fi
+    done < <(ykman_cmd piv info \
+        | grep -E 'WARNING: Using default (PIN|PUK|Management)')
+
+    export YK_AC_PIN
+    export YK_AC_PUK
+    export YK_AC_MGMT
+}
+
 function yk_import_key() {
     SLOT="${1}"
     PRIV_KEY="${2}"
 
     # Import the private key into the yubikey.
     ykman_cmd piv keys import \
-        -m "${DEF_MGMT}" \
+        -m "${YK_AC_MGMT:-${DEF_MGMT}}" \
         -p "${PASSPHRASE}" \
         ${SLOT} ${PRIV_KEY}
 }
@@ -192,8 +221,8 @@ function yk_generate_cert() {
     # This cert is not used by ssh tools, is only needed by the PIV
     # application in the yubikey.
     ykman_cmd piv certificates generate \
-        -P "${DEF_PIN}" \
-        -m "${DEF_MGMT}" \
+        -P "${YK_AC_PIN:-${DEF_PIN}}" \
+        -m "${YK_AC_MGMT:-${DEF_MGMT}}" \
         -s "${SUBJECT}" \
         -d ${TTL_DAYS} \
         ${SLOT} ${OPENSSL_PUB}
@@ -206,6 +235,7 @@ function yk_main() {
         set -x
         ykman_cmd piv info \
             && yk_load_access_codes \
+            && yk_select_access_codes \
             && env | grep YK_
     fi
     rc=$?

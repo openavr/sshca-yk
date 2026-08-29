@@ -74,9 +74,9 @@ Yubikey and repeating the process:
     $ ./ca-yk-set-access.sh
 
 Running the `ca-create.sh` multiple times will not generate new keys given the
-same arguments, but note that it will fail if run again after the PIV access
+same arguments, but note that it may fail if run again after the PIV access
 codes have been changed on the Yubikey due to the defaults no longer being
-usable.
+usable, or the access codes were modified.
 
 Generate an `authorized_keys_ca` file that has entries you can copy to your
 `~/.ssh/authorized_keys` file on the server that you want to allow users to log
